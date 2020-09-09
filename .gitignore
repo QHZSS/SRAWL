@@ -1,0 +1,16 @@
+sqlova/**/*.pyc
+wikisql/**/*.pyc
+sqlnet/__pycache__
+bert/__pycache__
+__pycache__/
+trash/
+log/
+results/
+data/
+data_and_model/
+.idea
+*.swp
+annotated_wikisql_and_PyTorch_bert_param.zip
+dbp.py
+*.pt
+rr_p.jsonl

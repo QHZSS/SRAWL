@@ -16,12 +16,26 @@
     - `conda install tqdm`
 - The code has been tested on GeForce RTX2080Ti running on Ubuntu 18.04.4 LTS.
 
+Our method is consist of two parts: Score ranking and weighted loss update.
+
+#### Generate potential logical forms for QA pairs
+- Generate all possible logical forms according to the natural language questions and answers.
+- Based on the fact that the logical forms of WIKISQL dataset are fixed:
+    - SELECT _ FROM _ WHERE () AND () AND ()
+- See wikisql_data_generation.py for details
 
 #### Score ranking
 - See score.py for details
+- Calculate coverage score, natural score, simplicity score for each candidate logical form for a QA pair.
+  - Coverage score: The logical form with more words mentioned in question and table headers will have a higher score.
+  - Natural score: If the relationship between specific words and aggregating operators/where condition operators is closer (e.g. "total number" in natrual question and "SUM" in aggregating operators;"more than" in natural question and ">" in where condition operator), the natural score is higher.
+  - Simplicity score: The less Where Conditions the logical form has, the higher the score.
+  - All candidate logical forms for a QA pair are sorted by multiple scores according to thier order above.
+  - Select top5 logical forms for training.
 
 #### Weighted loss
-- See sqlova/model/nl2sql/wikisql_models.py L907-946 for details
+- Use top5 logical forms for training, calculate losses seprately and update losses with weighted sum of the 5 losses. 
+- See [sqlova/model/nl2sql/wikisql_models.py#L907-L946](https://github.com/QHZSS/SRAWL/blob/master/sqlova/model/nl2sql/wikisql_models.py#L907-L936) for details
 
 
 #### Data

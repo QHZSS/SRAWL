@@ -14,3 +14,5 @@ annotated_wikisql_and_PyTorch_bert_param.zip
 dbp.py
 *.pt
 rr_p.jsonl
+train.sh
+results*.jsonl

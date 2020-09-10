@@ -37,6 +37,9 @@ Our method is consist of two parts: Score ranking and weighted loss update.
 - Use top5 logical forms for training, calculate losses seprately and update losses with weighted sum of the 5 losses. 
 - See [sqlova/model/nl2sql/wikisql_models.py#L907-L946](https://github.com/QHZSS/SRAWL/blob/master/sqlova/model/nl2sql/wikisql_models.py#L907-L936) for details
 
+#### Result
+ - The method can get 85.3% dev set acc, and 85.0% test set acc, outpeform the STOA weakly-supervised methods.
+ - Can get higher accuracy using execution guided decoding(88.4% on test set).
 
 #### Data
 - Data needed for training will be upload later

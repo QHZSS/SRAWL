@@ -38,6 +38,8 @@ def construct_hyper_param(parser):
 
     parser.add_argument("--trained", default=False, action='store_true')
 
+    parser.add_argument("--hardem", default=False, action='store_true')
+
     parser.add_argument('--tepoch', default=200, type=int)
     parser.add_argument("--bS", default=32, type=int,
                         help="Batch size")
@@ -139,16 +141,20 @@ def get_bert(BERT_PT_PATH, bert_type, do_lower_case, no_pretraining):
     return model_bert, tokenizer, bert_config
 
 
-def get_opt(model, model_bert, fine_tune):
+def get_opt(model, model_bert, model_weight, fine_tune):
     if fine_tune:
-        opt = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
-                               lr=args.lr, weight_decay=0)
 
-        opt_bert = torch.optim.Adam(filter(lambda p: p.requires_grad, model_bert.parameters()),
-                                    lr=args.lr_bert, weight_decay=0)
+        paras=[{"params":model_weight.model.parameters(),"lr":args.lr},
+        {"params":model_weight.eta,"lr": 0.1}]
+
+        opt = torch.optim.AdamW(paras)
+
+        opt_bert = torch.optim.AdamW(filter(lambda p: p.requires_grad, model_bert.parameters()),
+                                    lr=args.lr_bert)
     else:
         opt = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
                                lr=args.lr, weight_decay=0)
+
         opt_bert = None
 
     return opt, opt_bert
@@ -181,6 +187,9 @@ def get_models(args, BERT_PT_PATH, trained=False, path_model_bert=None, path_mod
     model = Seq2SQL_v1(args.iS, args.hS, args.lS, args.dr, n_cond_ops, n_agg_ops)
     model = model.to(device)
 
+    model_weight=WeightLoss(5,[5.0,5.0,5.0,5.0,5.0],model)
+    model_weight=model_weight.to(device)
+
     if trained:
         assert path_model_bert != None
         assert path_model != None
@@ -198,8 +207,9 @@ def get_models(args, BERT_PT_PATH, trained=False, path_model_bert=None, path_mod
             res = torch.load(path_model, map_location='cpu')
 
         model.load_state_dict(res['model'])
+        return model, model_bert, tokenizer, bert_config
 
-    return model, model_bert, tokenizer, bert_config
+    return model, model_bert, model_weight, tokenizer, bert_config
 
 
 def get_data(path_wikisql, args):
@@ -210,11 +220,12 @@ def get_data(path_wikisql, args):
     return train_data, train_table, dev_data, dev_table, train_loader, dev_loader
 
 
-def train(train_loader, train_table, model, model_bert, opt, bert_config, tokenizer,
+def train(train_loader, train_table, model, model_bert,model_weight, opt, bert_config, tokenizer,
           max_seq_length, num_target_layers, accumulate_gradients=1, check_grad=True,
           st_pos=0, opt_bert=None, path_db=None, dset_name='train'):
     model.train()
     model_bert.train()
+    model_weight.train()
 
     ave_loss = 0
     cnt = 0  # count the # of examples
@@ -272,12 +283,17 @@ def train(train_loader, train_table, model, model_bert, opt, bert_config, tokeni
             continue
 
         # score
-        s_sc, s_sa, s_wn, s_wc, s_wo, s_wv = model(wemb_n, l_n, wemb_h, l_hpu, l_hs,
-                                                   g_sc=[i[0] for i in g_sc], g_sa=[i[0] for i in g_sa], g_wn=[i[0] for i in g_wn], g_wc=[i[0] for i in g_wc], g_wvi=[i[0] for i in g_wvi])
+        #res=[model(wemb_n, l_n, wemb_h, l_hpu, l_hs,g_sc=[i[j] for i in g_sc], g_sa=[i[j] for i in g_sa], g_wn=[i[j] for i in g_wn], g_wc=[i[j] for i in g_wc], g_wvi=[i[j] for i in g_wvi]) for j in range(5)]
+
+        #s_sc, s_sa, s_wn, s_wc, s_wo, s_wv = [x[0] for x in res],[x[1] for x in res],[x[2] for x in res],[x[3] for x in res],[x[4] for x in res],[x[5] for x in res]
+
+        #s_sc, s_sa, s_wn, s_wc, s_wo, s_wv=model(wemb_n, l_n, wemb_h, l_hpu, l_hs,g_sc=[i[0] for i in g_sc], g_sa=[i[0] for i in g_sa], g_wn=[i[0] for i in g_wn], g_wc=[i[0] for i in g_wc], g_wvi=[i[0] for i in g_wvi])
 
         # Calculate loss & step
-        loss = Loss_sw_se(s_sc, s_sa, s_wn, s_wc, s_wo, s_wv, g_sc, g_sa, g_wn, g_wc, g_wo, g_wvi,is_train=True)
+        #loss = Loss_sw_se(s_sc, s_sa, s_wn, s_wc, s_wo, s_wv, g_sc, g_sa, g_wn, g_wc, g_wo, g_wvi,is_train=True)
 
+        loss_per, loss, s_sc, s_sa, s_wn, s_wc, s_wo, s_wv, eta = model_weight(wemb_n, l_n, wemb_h, l_hpu, l_hs,g_sc, g_sa, g_wn, g_wc,g_wo, g_wvi,hardem=args.hardem)
+        
         # Calculate gradient
         if iB % accumulate_gradients == 0:  # mode
             # at start, perform zero_grad
@@ -299,8 +315,15 @@ def train(train_loader, train_table, model, model_bert, opt, bert_config, tokeni
             # at intermediate stage, just accumulates the gradients
             loss.backward()
 
+        if( iB % 50 ==0):
+            print(f"top5 loss:{loss_per}")
+            print(f"combined loss:{loss/4}")
+            print(f"eta:{eta}")
+
         # Prediction
-        pr_sc, pr_sa, pr_wn, pr_wc, pr_wo, pr_wvi = pred_sw_se(s_sc, s_sa, s_wn, s_wc, s_wo, s_wv, )
+        pr_sc, pr_sa, pr_wn, pr_wc, pr_wo, pr_wvi = pred_sw_se(s_sc[0], s_sa[0], s_wn[0], s_wc[0], s_wo[0], s_wv[0], )
+
+        #pr_sc, pr_sa, pr_wn, pr_wc, pr_wo, pr_wvi = pred_sw_se(s_sc, s_sa, s_wn, s_wc, s_wo, s_wv, )
         pr_wv_str, pr_wv_str_wp = convert_pr_wvi_to_string(pr_wvi, nlu_t, nlu_tt, tt_to_t_idx, nlu)
 
         # Sort pr_wc:
@@ -678,7 +701,7 @@ if __name__ == '__main__':
     # )
     ## 4. Build & Load models
     if not args.trained:
-        model, model_bert, tokenizer, bert_config = get_models(args, BERT_PT_PATH)
+        model, model_bert,model_weight, tokenizer, bert_config = get_models(args, BERT_PT_PATH)
     else:
         # To start from the pre-trained models, un-comment following lines.
         path_model_bert = './model_bert_best.pt'
@@ -715,7 +738,7 @@ if __name__ == '__main__':
     ## 5. Get optimizers
     if args.do_train:
         print("loading finished, start training")
-        opt, opt_bert = get_opt(model, model_bert, args.fine_tune)
+        opt, opt_bert = get_opt(model, model_bert, model_weight, args.fine_tune)
 
         ## 6. Train
         acc_lx_t_best = -1
@@ -726,6 +749,7 @@ if __name__ == '__main__':
                                              train_table,
                                              model,
                                              model_bert,
+                                             model_weight,
                                              opt,
                                              bert_config,
                                              tokenizer,

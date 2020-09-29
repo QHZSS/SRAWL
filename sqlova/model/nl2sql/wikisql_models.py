@@ -904,6 +904,37 @@ class WVP_se(nn.Module):
                 s_wv[b, :, l_n1:, :] = -10000000000
         return s_wv
 
+
+
+class WeightLoss(nn.Module):
+    def __init__(self,count,eta,model):
+        super(WeightLoss,self).__init__()
+        self.count=count
+        self.eta=nn.Parameter(torch.Tensor(eta))
+        self.model=model
+    def forward(self,wemb_n, l_n, wemb_h, l_hpu, l_hs,g_sc, g_sa, g_wn, g_wc, g_wo, g_wvi,hardem=False):
+        res=[self.model(wemb_n, l_n, wemb_h, l_hpu, l_hs,g_sc=[i[j] for i in g_sc], g_sa=[i[j] for i in g_sa], g_wn=[i[j] for i in g_wn], g_wc=[i[j] for i in g_wc], g_wvi=[i[j] for i in g_wvi]) for j in range(5)]
+        
+        
+        s_sc, s_sa, s_wn, s_wc, s_wo, s_wv = [x[0] for x in res],[x[1] for x in res],[x[2] for x in res],[x[3] for x in res],[x[4] for x in res],[x[5] for x in res]
+        #s_sc, s_sa, s_wn, s_wc, s_wo, s_wv=self.model(wemb_n, l_n, wemb_h, l_hpu, l_hs,g_sc=[i[0] for i in g_sc], g_sa=[i[0] for i in g_sa], g_wn=[i[0] for i in g_wn], g_wc=[i[0] for i in g_wc], g_wvi=[i[0] for i in g_wvi])
+        losses=0
+        loss_per=[]
+        weight=[0.8,0.1,0.06,0.03,0.01]
+        for i in range(self.count):
+            loss_sum=Loss_sc(s_sc[i],[j[i] for j in g_sc])+Loss_sa(s_sa[i],[j[i] for j in g_sa])+Loss_wn(s_wn[i],[j[i] for j in g_wn])+Loss_wc(s_wc[i],[j[i] for j in g_wc])+Loss_wo(s_wo[i],[j[i] for j in g_wn],[j[i] for j in g_wo])+Loss_wv_se(s_wv[i],[j[i] for j in g_wn],[j[i] for j in g_wvi])
+            #loss_sum=Loss_sc(s_sc,[j[i] for j in g_sc])+Loss_sa(s_sa,[j[i] for j in g_sa])+Loss_wn(s_wn,[j[i] for j in g_wn])+Loss_wc(s_wc,[j[i] for j in g_wc])+Loss_wo(s_wo,[j[i] for j in g_wn],[j[i] for j in g_wo])+Loss_wv_se(s_wv,[j[i] for j in g_wn],[j[i] for j in g_wvi])
+            loss_per.append(loss_sum)
+            if not hardem:
+                losses+=(loss_sum)*torch.exp(-self.eta[i])+self.eta[i]*0.5
+                #losses+=weight[i]*loss_sum
+        if hardem:
+            losses+=min(loss_per)
+        #total_loss=torch.Tensor(losses).to(device)*torch.exp(-self.eta).to(device)+self.eta.to(device)
+        return loss_per , losses , s_sc, s_sa, s_wn, s_wc, s_wo, s_wv, self.eta
+
+
+
 def Loss_sw_se(s_sc, s_sa, s_wn, s_wc, s_wo, s_wv, g_sc, g_sa, g_wn, g_wc, g_wo, g_wvi,is_train=False):
     """
 
@@ -913,16 +944,24 @@ def Loss_sw_se(s_sc, s_sa, s_wn, s_wc, s_wo, s_wv, g_sc, g_sa, g_wn, g_wc, g_wo,
     :return:
     """
     weights=[0.8,0.1,0.06,0.03,0.01]
+    #weights=[1]
     #embed()
     if is_train:
         loss_scs,loss_sas,loss_wns,loss_wcs,loss_wos,loss_wv_ses=0,0,0,0,0,0
         for j,weight in enumerate(weights):
-            loss_scs+=weight*Loss_sc(s_sc,[i[j] for i in g_sc])
+            loss_scs+=weight*Loss_sc(s_sc[j],[i[j] for i in g_sc])
+            loss_sas+=weight*Loss_sa(s_sa[j],[i[j] for i in g_sa])
+            loss_wns+=weight*Loss_wn(s_wn[j],[i[j] for i in g_wn])
+            loss_wcs+=weight*Loss_wc(s_wc[j],[i[j] for i in g_wc])
+            loss_wos+=weight*Loss_wo(s_wo[j],[i[j] for i in g_wn],[i[j] for i in g_wo])
+            loss_wv_ses+=weight*Loss_wv_se(s_wv[j],[i[j] for i in g_wn],[i[j] for i in g_wvi])
+
+            """ loss_scs+=weight*Loss_sc(s_sc,[i[j] for i in g_sc])
             loss_sas+=weight*Loss_sa(s_sa,[i[j] for i in g_sa])
             loss_wns+=weight*Loss_wn(s_wn,[i[j] for i in g_wn])
             loss_wcs+=weight*Loss_wc(s_wc,[i[j] for i in g_wc])
             loss_wos+=weight*Loss_wo(s_wo,[i[j] for i in g_wn],[i[j] for i in g_wo])
-            loss_wv_ses+=weight*Loss_wv_se(s_wv,[i[j] for i in g_wn],[i[j] for i in g_wvi])
+            loss_wv_ses+=weight*Loss_wv_se(s_wv,[i[j] for i in g_wn],[i[j] for i in g_wvi]) """
 
         loss = 0
 

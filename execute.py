@@ -15,7 +15,7 @@ table_path=os.path.join(root,'data_and_model','train.tables.jsonl')
 queries=extract.read_queries(query_path)
 engine=DBEngine_s('./data_and_model/train.db')
 engine1=DBEngine('./data_and_model/train.db')
-sql={"sel": 4, "conds": [[5, 0, "Sydney Football Stadium , Sydney (11)"]], "agg": 3}
+sql={"sel":5,"conds":[[4,0,"western oval"]],"agg":4}
 qg=Query.from_dict(sql, ordered = True)
-res=engine.execute_query(queries[716]['table_id'],qg,lower=True)
+res=engine.execute_query(queries[17017]['table_id'],qg,lower=True)
 print(res)

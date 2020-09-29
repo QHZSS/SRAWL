@@ -32,6 +32,7 @@ def coverage_score(question,sql,header,iter):
     elements+=header_cs
     elements+=[re.sub("[, ]",'',str(cv).lower()) for cv in conds_values]
     question_tok=re.sub("[?,\u00a3]",'',question.lower()).split()
+    length=len(question_tok)
     question=re.sub("[? ,\u00a3]",'',question.lower())
     hit=[]
     dup=0
@@ -64,19 +65,19 @@ def coverage_score(question,sql,header,iter):
     hit=set(hit)
     score=len(hit)-dup
 
-    return score
+    return score/length * 100
 
 def simplicity_score(sql):
     conds=sql['conds']
     conds_count=len(conds)
     if(conds_count ==0):
-        return 1
+        return 100
     elif(conds_count ==1):
-        return 1-1/4
+        return 75
     elif(conds_count ==2):
-        return 1-2/4
+        return 50
     elif(conds_count==3):
-        return 1-3/4
+        return 25
     else:
         return 0
 
@@ -109,7 +110,7 @@ def natrual_score(question,sql,header):
         score=2
     else:
         score=0
-    return score
+    return score *50
 
 def op_score(question,sql,iter):
     op_1=['higher','more','greater','larger','later','bigger','better','longer']
@@ -146,7 +147,7 @@ def op_score(question,sql,iter):
     for i in op2l:
         if i:
             op2+=1
-    return int(gt==op1) + int(lt==op2) + int(eq ==op0)
+    return (int(gt==op1) + int(lt==op2) + int(eq ==op0))/3.0 *100.0
     
     
 
@@ -209,7 +210,7 @@ if __name__ == '__main__':
             p_sql['n_score']=natrual_score(question,p_sql['query'],header)
             p_sql['o_score']=op_score(question,p_sql['query'],i)
         
-        p_sqls=sorted(p_sqls,key=lambda x: (x['c_score'],x['s_score'],x['o_score'],x['n_score']) ,reverse=True)
+        p_sqls=sorted(p_sqls,key=lambda x: (x['c_score']+0.005*x['s_score']+0.01*x['o_score']+0.01*x['n_score']) ,reverse=True)
         if p_sqls:
             tops=5 if len(p_sqls) >=5 else len(p_sqls)
             pad=[p_sqls[0]] * (5-tops)
@@ -251,7 +252,7 @@ if __name__ == '__main__':
     print(correct_num/56355)
     print(no_psql)
     print(correct_count)
-    with open('./data_and_model/train_tok_process_9081006.jsonl','w') as f:
+    with open('./data_and_model/train_tok_sumscore.jsonl','w') as f:
         for i,query in enumerate(tqdm(queries)):
             if ranked_sql[i][0]['query']['agg'] != -1:
                 query['sql']=[sql["query"] for sql in ranked_sql[i]]

@@ -29,7 +29,7 @@ if __name__ == '__main__':
     path_wikisql0 = os.path.join(path_h,'data/WikiSQL-1.1')
     path_source = os.path.join(path_wikisql0, f'{mode}.jsonl')
     path_db = os.path.join(path_wikisql0, f'{mode}.db')
-    path_pred = os.path.join(path_save_analysis, f'results_{mode}.jsonl')
+    path_pred = os.path.join(path_save_analysis, f'results_{mode}_norel.jsonl')
 
 
     # For the case when use "argument"

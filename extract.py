@@ -73,11 +73,11 @@ def read_potential_sqls(filepath):
 if __name__ == '__main__':
 
     root='/mnt/sda/qhz/sqlova'
-    query_path=os.path.join(root,'data_and_model','train_tok_process_9081006.jsonl')
+    query_path=os.path.join(root,'data_and_model','train_tok_sumscore_withoutsimplicity.jsonl')
     queries=read_queries(query_path)
     #answer_path='./syn.txt'
     #answers=read_gold_answers(answer_path)
-    with open('./data_and_model/train_tok_9081006.jsonl','w') as f:
+    with open('./data_and_model/train_tok_nosim.jsonl','w') as f:
         for i,query in enumerate(tqdm(queries)):
             sqls=query['sql']
             question=query['question']

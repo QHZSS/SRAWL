@@ -81,10 +81,10 @@ def simplicity_score(sql):
     else:
         return 0
 
-def natrual_score(question,sql,header):
+def agg_op_score(question,sql,header):
     agg1=['highest','maximum','most','greatest','largest','latest','biggest','best','max']
     agg2=['first','min','minimum','smallest','worst','lowest','least','earliest']
-    agg3=['howmany','wahtisthetot','whatisthenumber','whatistot','amountof','thenumberof','totalrank']
+    agg3=['howmany','whatisthetot','whatisthenumber','whatistot','amountof','thenumberof','totalrank']
     agg4=['sum','total']
     agg5=['average','frequency']
     question=re.sub("[? ,]",'',question.lower())
@@ -107,47 +107,41 @@ def natrual_score(question,sql,header):
     elif any([word in question for word in agg5]) and sql['agg']==5:
         score=1
     elif sql['agg']==0 and (any([word in header_sel for word in agg1+agg2+agg3+agg4+agg5]) or any([ word in ' '.join(header_cs) for word in agg1+agg2+agg3+agg4+agg5])):
-        score=2
+        score=1
     else:
         score=0
-    return score *50
+    return score / (1+len(sql['conds']))
 
-def op_score(question,sql,iter):
+def cond_op_score(question,sql,iter):
     op_1=['higher','more','greater','larger','later','bigger','better','longer']
     op_2=['earlier','less','fewer','smaller','worse','lower','under']
+    question_tok=re.sub("[?,\u00a3]",'',question.lower()).split()
     question=re.sub("[? ,]",'',question.lower())
     conds_ops=[cond[1] for cond in sql['conds']]
-    gtl=[ word in question for word in op_1]
-    ltl=[ word in question for word in op_2]
-    gt=0
-    lt=0
-    for i in gtl:
-        if i:
-            gt+=1
-    for i in ltl:
-        if i:
-            lt+=1
-    
-    eq=len(conds_ops)-gt-lt
+    conds_values=[cond[2] for cond in sql['conds']]
+    score=0
+    for i,op in enumerate(conds_ops):
+        if op==1: #gt
+            for tw in op_1:
+                tw=str(tw)
+                if question.find(tw) >=0:
+                    if(abs(question.find(tw)-question.find(str(conds_values[i]))) <=20):
+                        score+=1
+                        break
+        if op==2: #lt
+            for tw in op_2:
+                tw=str(tw)
+                if question.find(tw) >=0:
+                    if(abs(question.find(tw)-question.find(str(conds_values[i]))) <=20):
+                        score+=1
+                        break
+        else:
+            rang=question[question.find(str(conds_values[i]))-15:question.find(str(conds_values[i]))+16]
+            if not any([ tw in rang for tw in op_1+op_2]):
+                score+=1
 
-    op0=0
-    op1=0
-    op2=0
-
-    op0l=[op == 0 for op in conds_ops]
-    op1l=[op == 1 for op in conds_ops]
-    op2l=[op == 2 for op in conds_ops]
-
-    for i in op0l:
-        if i:
-            op0+=1
-    for i in op1l:
-        if i:
-            op1+=1
-    for i in op2l:
-        if i:
-            op2+=1
-    return (int(gt==op1) + int(lt==op2) + int(eq ==op0))/3.0 *100.0
+   
+    return score / (1+len(sql['conds']))
     
     
 
@@ -207,17 +201,17 @@ if __name__ == '__main__':
             
             p_sql['c_score']=coverage_score(question,p_sql['query'],header,i)
             p_sql['s_score']=simplicity_score(p_sql['query'])
-            p_sql['n_score']=natrual_score(question,p_sql['query'],header)
-            p_sql['o_score']=op_score(question,p_sql['query'],i)
+            p_sql['agg_score']=agg_op_score(question,p_sql['query'],header)
+            p_sql['cond_score']=cond_op_score(question,p_sql['query'],i)
         
-        p_sqls=sorted(p_sqls,key=lambda x: (x['c_score']+0.005*x['s_score']+0.01*x['o_score']+0.01*x['n_score']) ,reverse=True)
+        p_sqls=sorted(p_sqls,key=lambda x: (0.7*x['c_score']*0+0.1*x['s_score']+0.2*x['agg_score']+0.2*x['cond_score']) ,reverse=True)
         if p_sqls:
             tops=5 if len(p_sqls) >=5 else len(p_sqls)
             pad=[p_sqls[0]] * (5-tops)
             ranked_sql.append(pad+p_sqls[0:tops])
         else:
             no_psql+=1
-            ranked_sql.append([{'query':{'agg': -1, 'conds':[],'sel':0}, 'c_score':0 , 's_score':0 ,'n_score':0 ,'o_score':0}])
+            ranked_sql.append([{'query':{'agg': -1, 'conds':[],'sel':0}, 'c_score':0 , 's_score':0 ,'agg_score':0 ,'cond_score':0}])
     correct_num=0
     correct_count=[0,0,0,0,0]
     with open('score_res_test.txt','w') as f_out:
@@ -243,16 +237,16 @@ if __name__ == '__main__':
                     f_out.write('   ')
                     f_out.write(str(r_sql_i['s_score']))
                     f_out.write('   ')
-                    f_out.write(str(r_sql_i['o_score']))
+                    f_out.write(str(r_sql_i['cond_score']))
                     f_out.write('   ')
-                    f_out.write(str(r_sql_i['n_score']))
+                    f_out.write(str(r_sql_i['agg_score']))
                     f_out.write('\n')
 
     print(correct_num)
     print(correct_num/56355)
     print(no_psql)
     print(correct_count)
-    with open('./data_and_model/train_tok_sumscore.jsonl','w') as f:
+    with open('./data_and_model/train_tok_sumscore_withoutcoverage.jsonl','w') as f:
         for i,query in enumerate(tqdm(queries)):
             if ranked_sql[i][0]['query']['agg'] != -1:
                 query['sql']=[sql["query"] for sql in ranked_sql[i]]

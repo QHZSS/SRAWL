@@ -152,9 +152,10 @@ def get_opt(model, model_bert, model_weight, fine_tune):
         opt_bert = torch.optim.AdamW(filter(lambda p: p.requires_grad, model_bert.parameters()),
                                     lr=args.lr_bert)
     else:
-        opt = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
-                               lr=args.lr, weight_decay=0)
+        paras=[{"params":model_weight.model.parameters(),"lr":args.lr},
+        {"params":model_weight.eta,"lr": 0.1}]
 
+        opt = torch.optim.AdamW(paras)
         opt_bert = None
 
     return opt, opt_bert
@@ -187,7 +188,7 @@ def get_models(args, BERT_PT_PATH, trained=False, path_model_bert=None, path_mod
     model = Seq2SQL_v1(args.iS, args.hS, args.lS, args.dr, n_cond_ops, n_agg_ops)
     model = model.to(device)
 
-    model_weight=WeightLoss(5,[5.0,5.0,5.0,5.0,5.0],model)
+    model_weight=WeightLoss(3,[1.0,1.0,1.0],model)
     model_weight=model_weight.to(device)
 
     if trained:
@@ -704,8 +705,8 @@ if __name__ == '__main__':
         model, model_bert,model_weight, tokenizer, bert_config = get_models(args, BERT_PT_PATH)
     else:
         # To start from the pre-trained models, un-comment following lines.
-        path_model_bert = './model_bert_best.pt'
-        path_model = './model_best.pt'
+        path_model_bert = './model_bert_best_top3_small_nofinetune.pt'
+        path_model = './model_best_top3_small_nofinetune.pt'
         model, model_bert, tokenizer, bert_config = get_models(args, BERT_PT_PATH, trained=True,
                                                                path_model_bert=path_model_bert, path_model=path_model)
 
@@ -733,7 +734,25 @@ if __name__ == '__main__':
                                                       dset_name='test', EG=args.EG)
 
             # save results for the official evaluation
-        save_for_evaluation(path_save_for_evaluation, results_test, 'test')
+        save_for_evaluation(path_save_for_evaluation, results_test, 'test_top3_small_nofinetune_eg')
+
+        with torch.no_grad():
+                acc_dev, results_dev, cnt_list = test(dev_loader,
+                                                      dev_table,
+                                                      model,
+                                                      model_bert,
+                                                      bert_config,
+                                                      tokenizer,
+                                                      args.max_seq_length,
+                                                      args.num_target_layers,
+                                                      detail=False,
+                                                      path_db=path_wikisql,
+                                                      st_pos=0,
+                                                      dset_name='dev', EG=args.EG)
+
+
+            # save results for the official evaluation
+        save_for_evaluation(path_save_for_evaluation, results_dev, 'dev_top3_small_nofinetune_eg')
 
     ## 5. Get optimizers
     if args.do_train:
@@ -780,7 +799,7 @@ if __name__ == '__main__':
             print_result(epoch, acc_dev, 'dev')
 
             # save results for the official evaluation
-            save_for_evaluation(path_save_for_evaluation, results_dev, f'dev0904_top1_{epoch}')
+            save_for_evaluation(path_save_for_evaluation, results_dev, f'dev_top3_{epoch}')
 
             # save best model
             # Based on Dev Set logical accuracy lx
@@ -790,10 +809,10 @@ if __name__ == '__main__':
                 epoch_best = epoch
                 # save best model
                 state = {'model': model.state_dict()}
-                torch.save(state, os.path.join('.', 'model_best_top1.pt'))
+                torch.save(state, os.path.join('.', 'model_best.pt'))
 
                 state = {'model_bert': model_bert.state_dict()}
-                torch.save(state, os.path.join('.', 'model_bert_best_top1.pt'))
+                torch.save(state, os.path.join('.', 'model_bert_best.pt'))
 
             print(f" Best Dev acc: {acc_lx_t_best} at epoch: {epoch_best}")
 

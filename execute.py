@@ -15,7 +15,7 @@ table_path=os.path.join(root,'data_and_model','train.tables.jsonl')
 queries=extract.read_queries(query_path)
 engine=DBEngine_s('./data_and_model/train.db')
 engine1=DBEngine('./data_and_model/train.db')
-sql={"sel":5,"conds":[[4,0,"western oval"]],"agg":4}
+sql={"sel": 9, "conds": [[3, 1, 8793], [5, 2, 1030]], "agg": 2}
 qg=Query.from_dict(sql, ordered = True)
-res=engine.execute_query(queries[17017]['table_id'],qg,lower=True)
+res=engine.execute_query(queries[15841]['table_id'],qg,lower=True)
 print(res)

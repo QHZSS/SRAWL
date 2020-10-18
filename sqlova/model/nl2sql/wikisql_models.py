@@ -1,8 +1,3 @@
-# Copyright 2019-present NAVER Corp.
-# Apache License v2.0
-
-# Wonseok Hwang
-
 import os, json
 from copy import deepcopy
 from matplotlib.pylab import *

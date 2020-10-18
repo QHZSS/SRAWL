@@ -15,7 +15,7 @@ from IPython import embed
 
 
 
-data_dir = "/home/sewon/data/narrativeqa"
+data_dir = "narrativeqa"
 title_s = "<title>"
 title_e = "</title>"
 

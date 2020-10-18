@@ -1,5 +1,4 @@
 # From original SQLNet code.
-# Wonseok modified. 20180607
 
 import records
 import re

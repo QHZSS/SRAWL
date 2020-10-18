@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 import json
 from argparse import ArgumentParser
 from tqdm import tqdm
@@ -8,8 +8,6 @@ from wikisql.lib.common import count_lines
 
 import os
 
-# Jan1 2019. Wonseok. Path info has added to original wikisql/evaluation.py
-# Only need to add "query" (essentially "sql" in original data) and "table_id" while constructing file.
 
 if __name__ == '__main__':
 

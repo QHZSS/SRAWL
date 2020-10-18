@@ -1,7 +1,6 @@
-# Copyright 2019-present NAVER Corp.
+
 # Apache License v2.0
 
-# Wonseok Hwang
 import os, json
 import random as python_random
 from matplotlib.pylab import *

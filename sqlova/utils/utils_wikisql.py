@@ -1,7 +1,5 @@
-# Copyright 2019-present NAVER Corp.
-# Apache License v2.0
 
-# Wonseok Hwang
+# Apache License v2.0
 
 import os, json
 import random as rd

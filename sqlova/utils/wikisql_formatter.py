@@ -1,8 +1,7 @@
-# Copyright 2019-present NAVER Corp.
+
 # Apache License v2.0
 
 
-# Wonseok Hwang
 # Convert the wikisql format to the suitable format for the BERT.
 import os, sys, json
 from matplotlib.pylab import *

@@ -187,7 +187,9 @@ if __name__ == '__main__':
     p_sqlss=extract.read_potential_sqls(p_sqls_path)
     ranked_sql=[]
     no_psql=0
+    leng=[]
     for i, p_sqls in enumerate(tqdm(p_sqlss)):
+        leng.append(len(p_sqls))
         question=queries[i]['question']
         header=headers[queries[i]['table_id']]
         g_sql=queries[i]['sql']

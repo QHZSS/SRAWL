@@ -48,7 +48,7 @@ Our method is consist of two parts: Score ranking and weighted loss update.
 
 
 #### Data
-- Data needed for training will be upload later
+- Data needed for training is available at [link](https://1drv.ms/u/s!AkWBMVcXgdNqpFOllgkL3S059SlD?e=yK4JyX).
 
 #### Running code
 - Type `python3 train.py --seed 1 --bS 4 --accumulate_gradients 8 --bert_type_abb uS --fine_tune --lr 0.001 --lr_bert 0.00001 --max_seq_leng 222` on terminal.

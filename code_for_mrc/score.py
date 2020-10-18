@@ -2,6 +2,7 @@ from tqdm import tqdm
 import json
 from IPython import embed
 import tokenization
+import numpy as np
 from itertools import groupby
 import gensim
 
@@ -47,12 +48,12 @@ def coverage_score(question,sentence):
             score+=1
             already.append(word)
     length=len(question)
-    return score/length*100
+    return score/length
 
-def simplicity_score(answer):
-    return 100-len(answer)
+def simplicity_score(answer,answers):
+    return np.min([len(a.split()) for a in answers])/len(answer)
 
-def natural_score(question,sentence,wv):
+def relatedness_score(question,sentence,wv):
     score=0
     # remove words that has counted in coverage score
     already=[] #words which has already been counted
@@ -69,7 +70,7 @@ def natural_score(question,sentence,wv):
             if any([score>=0.4 for score in similarities]):
                 score+=1
     length=len(question)
-    return score/length*100
+    return score/length
 
 
 if __name__=="__main__":
@@ -84,9 +85,9 @@ if __name__=="__main__":
                     if len(answers) !=0: #ignore empty answers paragraph
                         for j,answer in enumerate(answers):
                             example['answers'][i][j]['c_score']=coverage_score(example['question_split'],answer['answer_sentence'])
-                            example['answers'][i][j]['s_score']=simplicity_score(answer['text_tok'])
-                            example['answers'][i][j]['n_score']=natural_score(example['question_split'],answer['answer_sentence'],wv)
-                        example['answers'][i]=sorted(example['answers'][i],key=lambda x:(0.5*x['n_score']+0.1*x['s_score']),reverse=True)
+                            example['answers'][i][j]['s_score']=simplicity_score(answer['text_tok'],answer['final_answers'])
+                            example['answers'][i][j]['r_score']=relatedness_score(example['question_split'],answer['answer_sentence'],wv)
+                        example['answers'][i]=sorted(example['answers'][i],key=lambda x:(0.45*x['r_score']+0.45*x['c_score']+0.1*x['s_score']),reverse=True)
                 f.write(json.dumps(example))
                 f.write('\n')
                 

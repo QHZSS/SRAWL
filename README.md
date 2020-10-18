@@ -20,7 +20,8 @@ Our method is consist of two parts: Score ranking and weighted loss update.
 
 
 #### Model
- - We use [SQLova](https://github.com/naver/sqlova) as our base model and apply our method on it.
+ - We use [SQLova](https://github.com/naver/sqlova) as our base model for semantic parsing task and apply our method on it.
+ - We use [single-hop-rc](https://github.com/shmsw25/single-hop-rc) as our base model for machine reading comprehension task and apply our method on it. The code for MRC task is in
 
 #### Generate potential logical forms for QA pairs
 - See [wikisql_data_generation.py](https://github.com/QHZSS/SRAWL/blob/master/wikisql_data_generation.py), which is originally used in [qa-hard-em](https://github.com/shmsw25/qa-hard-em/tree/wikisql)

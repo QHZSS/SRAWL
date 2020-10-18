@@ -29,7 +29,7 @@ if __name__ == '__main__':
     path_wikisql0 = os.path.join(path_h,'data/WikiSQL-1.1')
     path_source = os.path.join(path_wikisql0, f'{mode}.jsonl')
     path_db = os.path.join(path_wikisql0, f'{mode}.db')
-    path_pred = os.path.join(path_save_analysis, f'results_{mode}_norel.jsonl')
+    path_pred = os.path.join(path_save_analysis, f'results_{mode}_top3.jsonl')
 
 
     # For the case when use "argument"
@@ -60,6 +60,16 @@ if __name__ == '__main__':
                     pred = repr(e)
             correct = pred == gold
             match = qp == qg
+            if(correct ==0):
+                try:
+                    print(f"question: {ep['nlu']}")
+                    print(f"result: {ep['query']}")
+                    print(f"gold :{eg['sql']}")
+                    print(f"result: {pred},{gold}")
+                    print(f"table-id: {eg['table_id']}\n")
+                except Exception as e:
+                    a=1
+                
             grades.append(correct)
             exact_match.append(match)
 

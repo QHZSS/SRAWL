@@ -16,3 +16,4 @@ dbp.py
 rr_p.jsonl
 train.sh
 results*.jsonl
+evluate*.txt

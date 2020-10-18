@@ -705,8 +705,8 @@ if __name__ == '__main__':
         model, model_bert,model_weight, tokenizer, bert_config = get_models(args, BERT_PT_PATH)
     else:
         # To start from the pre-trained models, un-comment following lines.
-        path_model_bert = './model_bert_best_top3_small_nofinetune.pt'
-        path_model = './model_best_top3_small_nofinetune.pt'
+        path_model_bert = './model_bert_best_top3.pt'
+        path_model = './model_best_top3.pt'
         model, model_bert, tokenizer, bert_config = get_models(args, BERT_PT_PATH, trained=True,
                                                                path_model_bert=path_model_bert, path_model=path_model)
 
@@ -734,7 +734,7 @@ if __name__ == '__main__':
                                                       dset_name='test', EG=args.EG)
 
             # save results for the official evaluation
-        save_for_evaluation(path_save_for_evaluation, results_test, 'test_top3_small_nofinetune_eg')
+        save_for_evaluation(path_save_for_evaluation, results_test, 'test_top3')
 
         with torch.no_grad():
                 acc_dev, results_dev, cnt_list = test(dev_loader,
@@ -752,7 +752,7 @@ if __name__ == '__main__':
 
 
             # save results for the official evaluation
-        save_for_evaluation(path_save_for_evaluation, results_dev, 'dev_top3_small_nofinetune_eg')
+        save_for_evaluation(path_save_for_evaluation, results_dev, 'dev_top3')
 
     ## 5. Get optimizers
     if args.do_train:
@@ -809,10 +809,10 @@ if __name__ == '__main__':
                 epoch_best = epoch
                 # save best model
                 state = {'model': model.state_dict()}
-                torch.save(state, os.path.join('.', 'model_best.pt'))
+                torch.save(state, os.path.join('.', 'model_best_top3.pt'))
 
                 state = {'model_bert': model_bert.state_dict()}
-                torch.save(state, os.path.join('.', 'model_bert_best.pt'))
+                torch.save(state, os.path.join('.', 'model_bert_top3.pt'))
 
             print(f" Best Dev acc: {acc_lx_t_best} at epoch: {epoch_best}")
 

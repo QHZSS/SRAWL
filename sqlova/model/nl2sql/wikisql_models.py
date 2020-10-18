@@ -920,7 +920,7 @@ class WeightLoss(nn.Module):
         #s_sc, s_sa, s_wn, s_wc, s_wo, s_wv=self.model(wemb_n, l_n, wemb_h, l_hpu, l_hs,g_sc=[i[0] for i in g_sc], g_sa=[i[0] for i in g_sa], g_wn=[i[0] for i in g_wn], g_wc=[i[0] for i in g_wc], g_wvi=[i[0] for i in g_wvi])
         losses=0
         loss_per=[]
-        weight=[0.8,0.1,0.06,0.03,0.01]
+        weight=[0.8,0.15,0.05]
         for i in range(self.count):
             loss_sum=Loss_sc(s_sc[i],[j[i] for j in g_sc])+Loss_sa(s_sa[i],[j[i] for j in g_sa])+Loss_wn(s_wn[i],[j[i] for j in g_wn])+Loss_wc(s_wc[i],[j[i] for j in g_wc])+Loss_wo(s_wo[i],[j[i] for j in g_wn],[j[i] for j in g_wo])+Loss_wv_se(s_wv[i],[j[i] for j in g_wn],[j[i] for j in g_wvi])
             #loss_sum=Loss_sc(s_sc,[j[i] for j in g_sc])+Loss_sa(s_sa,[j[i] for j in g_sa])+Loss_wn(s_wn,[j[i] for j in g_wn])+Loss_wc(s_wc,[j[i] for j in g_wc])+Loss_wo(s_wo,[j[i] for j in g_wn],[j[i] for j in g_wo])+Loss_wv_se(s_wv,[j[i] for j in g_wn],[j[i] for j in g_wvi])

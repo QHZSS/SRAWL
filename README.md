@@ -1,10 +1,10 @@
-# SRAWL
+# Weakly-Supervised Question Answering with Effective Rankand Weighted Loss over Candidates
 
 ### Source code
 #### Requirements
 - `python3.6` or higher.
 - `PyTorch 0.4.0` or higher.
-- `CUDA 9.0`
+- `CUDA 9.0` or higher
 - Python libraries: `babel, matplotlib, defusedxml, tqdm`
 - Example
     - Install [minicoda](https://conda.io/miniconda.html)
@@ -18,28 +18,33 @@
 
 Our method is consist of two parts: Score ranking and weighted loss update.
 
+
+#### Model
+ - We use [SQLova](https://github.com/naver/sqlova) as our base model and apply our method on it.
+
 #### Generate potential logical forms for QA pairs
+- See [wikisql_data_generation.py](https://github.com/QHZSS/SRAWL/blob/master/wikisql_data_generation.py), which is originally used in [qa-hard-em](https://github.com/shmsw25/qa-hard-em/tree/wikisql)
 - Generate all possible logical forms according to the natural language questions and answers.
 - Based on the fact that the logical forms of WIKISQL dataset are fixed:
     - SELECT _ FROM _ WHERE () AND () AND ()
-- See wikisql_data_generation.py for details
 
 #### Score ranking
-- See score.py for details
+- See [score.py](https://github.com/QHZSS/SRAWL/blob/master/score.py) for details
 - Calculate coverage score, natural score, simplicity score for each candidate logical form for a QA pair.
   - Coverage score: The logical form with more words mentioned in question and table headers will have a higher score.
-  - Natural score: If the relationship between specific words and aggregating operators/where condition operators is closer (e.g. "total number" in natrual question and "SUM" in aggregating operators;"more than" in natural question and ">" in where condition operator), the natural score is higher.
+  - Relatedness score: If the relationship between specific words and aggregating operators/where condition operators is closer (e.g. "total number" in natrual question and "SUM" in aggregating operators;"more than" in natural question and ">" in where condition operator), the natural score is higher.
   - Simplicity score: The less Where Conditions the logical form has, the higher the score.
   - All candidate logical forms for a QA pair are sorted by multiple scores according to thier order above.
-  - Select top5 logical forms for training.
+  - Select top3 solutions for training.
 
 #### Weighted loss
-- Use top5 logical forms for training, calculate losses seprately and update losses with weighted sum of the 5 losses. 
-- See [sqlova/model/nl2sql/wikisql_models.py#L907-L946](https://github.com/QHZSS/SRAWL/blob/master/sqlova/model/nl2sql/wikisql_models.py#L907-L936) for details
+- Use top3 solutions for training, weigh their loss by [task uncertainty](https://arxiv.org/abs/1705.07115v3)
+- See [sqlova/model/nl2sql/wikisql_models.py#L909-L934](https://github.com/QHZSS/SRAWL/blob/master/sqlova/model/nl2sql/wikisql_models.py#L907-L936) for details
 
 #### Result
- - The method can get 85.3% dev set acc, and 85.0% test set acc, outpeform the STOA weakly-supervised methods.
- - Can get higher accuracy using execution guided decoding(88.4% on test set).
+ - The method can get 85.8% dev set acc, and 85.3% test set acc, outpeform the SOTA(84.4%/83.9%) weakly-supervised methods.
+ - Can get higher accuracy using execution guided decoding(88.8%/88.5%).
+
 
 #### Data
 - Data needed for training will be upload later

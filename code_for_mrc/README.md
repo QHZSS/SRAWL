@@ -10,7 +10,7 @@ PyTorch 1.1.0 or higher
 Download Data and BERT, and unzip them in the current directory.
 
 - [BERT][bert-model-link]: BERT Base Uncased in PyTorch
-- Data: The data used is a preprocessed version of NarrativeQA，we use same method mentioned in [qa-hard-em](https://github.com/shmsw25/qa-hard-em), see [link]() for preprocess detail. The original NarrativeQA data is available at [link](https://github.com/deepmind/narrativeqa).
+- Data: The data used is a preprocessed version of NarrativeQA，we use same method mentioned in [qa-hard-em](https://github.com/shmsw25/qa-hard-em), see [link](https://github.com/QHZSS/SRAWL/blob/master/code_for_mrc/convert_narrative2squad.py) for preprocess detail. The original NarrativeQA data is available at [link](https://github.com/deepmind/narrativeqa).
 
 Then, you can do
 ```
@@ -54,7 +54,6 @@ Training flags:
 
 
 [bert-model-link]: https://drive.google.com/file/d/1XaMX-u5ZkWGH3f0gPrDtrBK1lKDU-QFk/view?usp=sharing
-[preprocessed-data-link]: https://drive.google.com/file/d/1FqTr6NzZf0CQ3FmA2dxF9R-2X0--CmBf/view?usp=sharing
 [acl-paper]: https://arxiv.org/pdf/1906.02900.pdf
 
 

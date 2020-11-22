@@ -42,6 +42,10 @@ Our method is consist of two parts: Score ranking and weighted loss update.
 - Use top3 solutions for training, weigh their loss by [task uncertainty](https://arxiv.org/abs/1705.07115v3)
 - See [sqlova/model/nl2sql/wikisql_models.py#L909-L934](https://github.com/QHZSS/SRAWL/blob/master/sqlova/model/nl2sql/wikisql_models.py#L907-L936) for details
 
+#### Trigger words and Hyperparameters
+- Trigger words for different operators used in SQL queries.
+- Hyperparameters used in experiment are listed below.
+![Trigger words and Hyperparameters](triggerwords and hyperparameters.png)
 #### Result
  - The method can get 85.8% dev set acc, and 85.3% test set acc, outpeform the SOTA(84.4%/83.9%) weakly-supervised methods.
  - Can get higher accuracy using execution guided decoding(88.8%/88.5%).

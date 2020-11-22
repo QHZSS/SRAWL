@@ -45,7 +45,7 @@ Our method is consist of two parts: Score ranking and weighted loss update.
 #### Trigger words and Hyperparameters
 - Trigger words for different operators used in SQL queries.
 - Hyperparameters used in experiment are listed below.
-![Trigger words and Hyperparameters](triggerwords and hyperparameters.png)
+![Trigger words and Hyperparameters](https://github.com/QHZSS/SRAWL/blob/master/triggerwords%20and%20hyperparameters.png)
 #### Result
  - The method can get 85.8% dev set acc, and 85.3% test set acc, outpeform the SOTA(84.4%/83.9%) weakly-supervised methods.
  - Can get higher accuracy using execution guided decoding(88.8%/88.5%).

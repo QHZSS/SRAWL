@@ -1,4 +1,4 @@
-# Weakly-Supervised Question Answering with Effective Rankand Weighted Loss over Candidates
+# Weakly-Supervised Question Answering with Effective Rank and Weighted Loss over Candidates
 
 ### Source code
 #### Requirements
